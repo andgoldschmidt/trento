@@ -133,6 +133,37 @@ class Proton : public Nucleus {
   virtual void sample_nucleons_impl() override;
 };
 
+/// ANDY:
+/// \rst
+/// Sample separation of nucleons from a Hulthen distribution
+/// .. math::
+///
+///   f(r) \propto equation things.
+///
+/// For deuteron.
+class Deuteron : public Nucleus {
+ public:
+  /// ``Nucleus::create()`` sets these parameters for a given species.
+  /// \param a Hulthen alpha 
+  /// \param b Hulthen beta
+  Deuteron(double a, double b);
+
+  /// The radius of a deuteron is computed from the parameters a, b.
+  virtual double radius() const override;
+
+ private:
+  /// Sample deuteron nucleon positions.
+  virtual void sample_nucleons_impl() override;
+
+  /// Hulthen parameters
+  const double a_, b_;
+
+  /// Hulthen distribution object.  Since the dist does not have an analytic
+  /// inverse CDF, approximate it as a piecewise linear dist.  For a large
+  /// number of steps this is very accurate.
+  mutable std::piecewise_linear_distribution<double> hulthen_dist_;
+};
+
 /// \rst
 /// Samples nucleons from a spherically symmetric Woods-Saxon distribution
 ///

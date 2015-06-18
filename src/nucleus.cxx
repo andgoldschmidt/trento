@@ -5,6 +5,7 @@
 #include "nucleus.h"
 
 #include <cmath>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -21,6 +22,8 @@ NucleusPtr Nucleus::create(const std::string& species) {
   // XXX: remember to add new species to the help output in main()
   if (species == "p")
     return NucleusPtr{new Proton{}};
+  else if (species == "d")
+    return NucleusPtr{new Deuteron{.228, 1.18}};
   else if (species == "Si")
     return NucleusPtr{new WoodsSaxonNucleus{28, 3.14, 0.537}};
   else if (species == "Si2")
@@ -63,6 +66,47 @@ double Proton::radius() const {
 void Proton::sample_nucleons_impl() {
   set_nucleon_position(*begin(), 0., 0.);
 }
+
+/// ANDY: deuteron things
+/// The sample range is set at plus ten standard deviations from the
+/// expected value of the Hulthen distribution.  For typical values of
+/// a and b, the probability of sampling beyond this radius is O(10^-5).
+Deuteron::Deuteron(double a, double b) : Nucleus(2), a_ (a), b_ (b),
+    hulthen_dist_ (1000, 0., .25 * (1/a + 1/b + 2/(a+b))
+      + 5 * std::sqrt(1/(a*a) + 1/(b*b) + 4/((a+b)*(a+b))), [a, b](double r)
+      { double f = std::exp(-a*r)-std::exp(-b*r); return f*f; })
+{}
+
+/// Radius set two standard deviations above the expected value of
+/// the Hulthen distribution.
+double Deuteron::radius() const {
+  return .5 * (1/a_ + 1/b_ + 2/(a_+b_))
+    + std::sqrt(1/(a_*a_) + 1/(b_*b_) + 4/((a_+b_)*(a_+b_)));
+}
+
+/// The proton is set at (0,0) and the neutron is placed at
+/// a distance determined by the Hulthen distribution.
+void Deuteron::sample_nucleons_impl() {
+  // Place the first nucleon at the origin.
+  set_nucleon_position(*begin(), 0., 0.);
+
+  // Sample separation from Hulthen distribution.
+  auto r = hulthen_dist_(random::engine);
+
+  // Sample isotropic spherical angles.
+  auto cos_theta = random::cos_theta<double>();
+  auto phi = random::phi<double>();
+
+  // Convert to transverse Cartesian coordinates
+  auto r_sin_theta = r * std::sqrt(1. - cos_theta*cos_theta);
+  auto x = r_sin_theta * std::cos(phi);
+  auto y = r_sin_theta * std::sin(phi);
+
+  // Place the second nucleon.
+  set_nucleon_position(*std::next(begin(), 1), x, y);
+  // XXX: re-center nucleon positions? seems more important now.
+}
+
 
 // Extend the W-S dist out to R + 10a; for typical values of (R, a), the
 // probability of sampling a nucleon beyond this radius is O(10^-5).
