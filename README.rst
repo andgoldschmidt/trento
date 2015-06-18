@@ -69,6 +69,8 @@ The known species are
 Symbol  Name     No. nucleons  Deformed
 ======  =======  ============  ========
 p       proton   1             ---
+Si      silicon  28            no
+Si2     silicon  28            yes
 Cu      copper   62            no
 Cu2     copper   62            yes
 Au      gold     197           no

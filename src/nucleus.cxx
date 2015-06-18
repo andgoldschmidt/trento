@@ -21,6 +21,10 @@ NucleusPtr Nucleus::create(const std::string& species) {
   // XXX: remember to add new species to the help output in main()
   if (species == "p")
     return NucleusPtr{new Proton{}};
+  else if (species == "Si")
+    return NucleusPtr{new WoodsSaxonNucleus{28, 3.14, 0.537}};
+  else if (species == "Si2")
+    return NucleusPtr{new DeformedWoodsSaxonNucleus{28, 3.14, 0.537, -0.478, 0.250}};
   else if (species == "Cu")
     return NucleusPtr{new WoodsSaxonNucleus{62, 4.2, 0.596}};
   else if (species == "Cu2")
