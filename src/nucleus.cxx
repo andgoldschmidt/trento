@@ -5,6 +5,7 @@
 #include "nucleus.h"
 
 #include <cmath>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -12,6 +13,7 @@
 #include <utility>
 
 #include <boost/math/constants/constants.hpp>
+#include <boost/filesystem.hpp>
 
 #include "random.h"
 
@@ -24,6 +26,8 @@ NucleusPtr Nucleus::create(const std::string& species) {
     return NucleusPtr{new Proton{}};
   else if (species == "d")
     return NucleusPtr{new Deuteron{.228, 1.18}};
+  else if (species == "He3")
+    return NucleusPtr{new Helium3{}};
   else if (species == "Si")
     return NucleusPtr{new WoodsSaxonNucleus{28, 3.14, 0.537}};
   else if (species == "Si2")
@@ -67,17 +71,17 @@ void Proton::sample_nucleons_impl() {
   set_nucleon_position(*begin(), 0., 0.);
 }
 
-/// ANDY: deuteron things
-/// The sample range is set at plus ten standard deviations from the
-/// expected value of the Hulthen distribution.  For typical values of
-/// a and b, the probability of sampling beyond this radius is O(10^-5).
+// ANDY{begin}
+// The sample range is set at plus ten standard deviations from the
+// expected value of the Hulthen distribution.  For typical values of
+// a and b, the probability of sampling beyond this radius is O(10^-5).
 Deuteron::Deuteron(double a, double b) : Nucleus(2), a_ (a), b_ (b),
     hulthen_dist_ (1000, 0., .25 * (1/a + 1/b + 2/(a+b))
       + 5 * std::sqrt(1/(a*a) + 1/(b*b) + 4/((a+b)*(a+b))), [a, b](double r)
       { double f = std::exp(-a*r)-std::exp(-b*r); return f*f; })
 {}
 
-/// Radius set two standard deviations above the expected value of
+/// Radius set two standard deviations past the expected value of
 /// the Hulthen distribution.
 double Deuteron::radius() const {
   return .5 * (1/a_ + 1/b_ + 2/(a_+b_))
@@ -85,7 +89,7 @@ double Deuteron::radius() const {
 }
 
 /// The proton is set at (0,0) and the neutron is placed at
-/// a distance determined by the Hulthen distribution.
+/// a distance determined by sampling the Hulthen distribution.
 void Deuteron::sample_nucleons_impl() {
   // Place the first nucleon at the origin.
   set_nucleon_position(*begin(), 0., 0.);
@@ -107,6 +111,47 @@ void Deuteron::sample_nucleons_impl() {
   // XXX: re-center nucleon positions? seems more important now.
 }
 
+// Load file containing nucleon positions.
+// Behavior is in accordance with known file structure. 
+NuclearProfile::NuclearProfile(const std::string& species) {
+  if (species == "He3") {
+    // load file
+    std::ifstream infile(he3_input_);
+    if (!infile) {
+      throw std::runtime_error{"file named '" + he3_input_ + "' not found."}; }
+    double x1, y1, x2, y2, x3, y3, dump;
+    // read in possible x,y plane positions for nucleons
+    while (infile >> x1 >> y1 >> dump >> x2 >> y2 >> dump >> x3 >> y3
+           >> dump >> dump >> dump >> dump) {
+      positions.push_back({x1, y1, x2, y2, x3, y3}); }
+  } else {
+    throw std::runtime_error{"file for '" + species + "' not found."}; }
+}
+
+Helium3::Helium3() : Nucleus(3) {}
+
+// Make nucleon profile for helium-3.
+NuclearProfile Helium3::profile_ {"He3"};
+
+// TODO: find a good default radius.
+double Helium3::radius() const {
+  return 0;
+}
+
+/// The three nucleons are positioned according to a random row
+/// of the input file from the static object NuclearProfile.
+void Helium3::sample_nucleons_impl() {
+  // Grab a random row
+  unsigned int row = static_cast<unsigned int>(random::canonical<>()
+    * (profile_.positions.size() + 1));
+  long unsigned int i = 0;
+  for (auto&& nucleon : *this) {
+    set_nucleon_position(nucleon, profile_.positions[row][i], 
+      profile_.positions[row][i+1]);
+    i+=2;
+  }
+}
+// ANDY{end}
 
 // Extend the W-S dist out to R + 10a; for typical values of (R, a), the
 // probability of sampling a nucleon beyond this radius is O(10^-5).

@@ -135,12 +135,12 @@ class Proton : public Nucleus {
 
 /// ANDY:
 /// \rst
-/// Sample separation of nucleons from a Hulthen distribution
+/// Deuteron nucleus, with separation of nucleons taken from the
+/// Hulthen distribution
 /// .. math::
 ///
 ///   f(r) \propto equation things.
 ///
-/// For deuteron.
 class Deuteron : public Nucleus {
  public:
   /// ``Nucleus::create()`` sets these parameters for a given species.
@@ -162,6 +162,34 @@ class Deuteron : public Nucleus {
   /// inverse CDF, approximate it as a piecewise linear dist.  For a large
   /// number of steps this is very accurate.
   mutable std::piecewise_linear_distribution<double> hulthen_dist_;
+};
+
+// Class to support loading helium-3 or triton data.
+class NuclearProfile {
+ public:
+  NuclearProfile(const std::string& species);
+  // Container for nucleon positions.
+  std::vector<std::vector<double>> positions;
+ private:
+  // Helium-3 filename (currently local, how should this be handled?)
+  const std::string he3_input_ = "he3_sample.dat";
+};
+
+/// Helium-3
+class Helium3 : public Nucleus {
+ public:
+  /// Default constructor.
+  Helium3();
+
+  /// Helium-3 radius.
+  virtual double radius() const override;
+
+ private:
+  // Sample helium-3 nucleon positions.
+  virtual void sample_nucleons_impl() override;
+
+  // Helium-3 position profile
+  static NuclearProfile profile_;
 };
 
 /// \rst

@@ -70,6 +70,7 @@ Symbol  Name     No. nucleons  Deformed
 ======  =======  ============  ========
 p       proton   1             ---
 d       deuteron 2             ---
+He3     helium   3             ---
 Si      silicon  28            no
 Si2     silicon  28            yes
 Cu      copper   62            no
@@ -80,7 +81,7 @@ Pb      lead     208           no
 U       uranium  238           yes
 ======  =======  ============  ========
 
-All species except the proton sample nucleons from a `Woods-Saxon <https://en.wikipedia.org/wiki/Woods%E2%80%93Saxon_potential>`_ distribution, either spherically symmetric or deformed as indicated.
+All species except the proton, deuteron, and helium-3 sample nucleons from a `Woods-Saxon <https://en.wikipedia.org/wiki/Woods%E2%80%93Saxon_potential>`_ distribution, either spherically symmetric or deformed as indicated.
 Copper and gold are slightly deformed—slightly enough that a symmetric distribution is a reasonable approximation—therefore both symmetric (``Cu``, ``Au``) and deformed (``Cu2``, ``Au2``) versions are provided, where both versions have the same nuclear radius and surface thickness.
 The naming convention and Woods-Saxon parameters follow the `PHOBOS Glauber <http://inspirehep.net/record/1310629>`_ model.
 
