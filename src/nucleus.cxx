@@ -148,7 +148,7 @@ void Helium3::sample_nucleons_impl() {
   for (auto&& nucleon : *this) {
     set_nucleon_position(nucleon, profile_.positions[row][i], 
       profile_.positions[row][i+1]);
-    i+=2;
+    i+=3;
   }
 }
 // ANDY{end}
